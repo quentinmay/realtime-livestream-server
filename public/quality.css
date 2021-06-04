@@ -1,0 +1,45 @@
+
+.mainContainer {
+    display: block;
+    width: 1152px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.table {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.video-container {
+    position: relative;
+    margin-top: 8px;
+}
+
+.video-container:before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-bottom: 56.25%;
+}
+
+.video-container > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+}
+
+.centeredVideo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: auto;
+}

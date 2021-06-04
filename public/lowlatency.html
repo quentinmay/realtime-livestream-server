@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Low Latency Live Stream</title>
+	<style type="text/css">
+		html,
+		body {
+			background-color: #111;
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+	</style>
+
+</head>
+
+<body>
+	<canvas id="video-canvas"></canvas>
+	<script type="text/javascript" src="jsmpeg.min.js"></script>
+	<div id="login-info">
+		<label for="username" style="font-family: Verdana, Geneva, Tahoma, sans-serif; color:white;"><b>Display
+				Name:</b></label>
+		<input id="username" type="text" placeholder="Enter display name" value="" />
+
+		<label for="streamKey" style="font-family: Verdana, Geneva, Tahoma, sans-serif; color:white;"><b>Stream
+				Key:</b></label>
+		<input id="streamKey" type="text" placeholder="Enter stream key" value="" />
+	</div>
+
+	<div id="streamURL">
+		<div class="url-input">
+			<label for="sURL" style="font-family: Verdana, Geneva, Tahoma, sans-serif; color:white;"><b>Stream
+					URL:</b></label>
+			<input id="sURL" type="text" value="" />
+		</div>
+	</div>
+	<button onclick="Login()">Join stream</button>
+	<table class="table table-bordered table-responsive-md table-striped text-center"
+		style="font-family: Verdana, Geneva, Tahoma, sans-serif; color:white;">
+	</table>
+	<script type="text/javascript">
+
+		function Login() {
+			var streamKey = document.getElementById('streamKey');
+			var username = document.getElementById('username');
+			if (!streamKey.value || !username.value) {
+				alert("Give a username and streamkey");
+				return;
+			}
+
+			document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+			document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+		}
+	</script>
+
+	<script>
+
+		requestUsers();
+		setInterval(requestUsers, 5000); //Check for user updates every 5 seconds.
+
+		function requestUsers() {
+			const Http = new XMLHttpRequest();
+			const url = `/users`;
+			Http.open("GET", url);
+			Http.send();
+
+			Http.onreadystatechange = (e) => {
+				try {
+					var connectedUsers = JSON.parse(Http.responseText);
+					let table = document.querySelector("table");
+					if (connectedUsers.users) {
+						generateTableHead(table, connectedUsers.users);
+					}
+
+				} catch (err) {
+
+				}
+			}
+		}
+
+
+		function generateTableHead(table, users) {
+			document.querySelector("table").innerHTML = "";
+			let thead = table.createTHead();
+			let firstRow = thead.insertRow();
+			var firstCell = firstRow.insertCell(0);
+
+			firstCell.innerHTML = `Connected Users (${users.length}):`;
+			firstCell.style.font = "bold 20px verdana,sans-serif";
+			firstCell.style.color = "white";
+
+			for (let user of users) {
+				if (!user) user = "Anonymous"
+				let row = thead.insertRow();
+				var cell = row.insertCell(0);
+				cell.innerHTML = user;
+
+			}
+		}
+
+	</script>
+	<script>
+
+
+		function loadPlayer() {
+			var canvas = document.getElementById('video-canvas');
+			var url = document.getElementById('sURL').value
+			var player = new JSMpeg.Player(url, { canvas: canvas });
+		}
+
+		function Login() {
+			var streamKey = document.getElementById('streamKey');
+			var username = document.getElementById('username');
+			var sURL = document.getElementById('sURL');
+			if (!streamKey.value || !username.value || !sURL.value) {
+				alert("Give a username, streamkey, and streamURL");
+				return;
+			}
+
+			document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+			document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+			document.cookie = "streamURL=" + sURL.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+			loadPlayer();
+		}
+
+		function loadSettings() {
+			var streamKey = document.getElementById('streamKey');
+			var username = document.getElementById('username');
+			var sURL = document.getElementById('sURL');
+			var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+			try {
+				if (cookies.streamkey) {
+					streamKey.value = cookies.streamkey;
+				}
+
+			} catch (err) {
+				console.log("Error loading streamKey cookie.");
+			}
+			try {
+				if (cookies.username) {
+					username.value = cookies.username;
+				}
+
+			} catch (err) {
+				console.log("Error loading username cookie.");
+			}
+			try {
+				if (cookies.streamURL) {
+					sURL.value = cookies.streamURL;
+				}
+			} catch (err) {
+				console.log("Error loading streamURL cookie.");
+			}
+
+			if (sURL.value == '') {
+				sURL.value = `wss://${document.location.host}`
+			}
+			loadPlayer();
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			loadSettings();
+		});
+	</script>
+</body>
+
+</html>

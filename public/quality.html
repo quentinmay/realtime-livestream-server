@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>Quality Live Stream</title>
+    <link rel="stylesheet" type="text/css" href="quality.css" />
+</head>
+
+<body>
+
+    <div class="mainContainer">
+        <div>
+            <div id="login">
+
+                <label for="username" style="font-family: Verdana, Geneva, Tahoma, sans-serif;"><b>Display
+                        Name:</b></label>
+                <input id="username" type="text" placeholder="Enter display name" value="" />
+
+                <label for="streamKey" style="font-family: Verdana, Geneva, Tahoma, sans-serif;"><b>Stream
+                        Key:</b></label>
+                <input id="streamKey" type="text" placeholder="Enter stream key" value="" />
+
+                <button onclick="Login()">Join stream</button>
+            </div>
+            <div id="streamURL">
+                <div class="url-input">
+                    <label for="sURL" style="font-family: Verdana, Geneva, Tahoma, sans-serif;"><b>Stream
+                            URL:</b></label>
+                    <input id="sURL" type="text" value="" />
+                </div>
+            </div>
+        </div>
+        <div class="video-container">
+            <div>
+                <video name="videoElement" class="centeredVideo" controls autoplay>
+                    Your browser is too old which doesn't support HTML5 video.
+                </video>
+            </div>
+        </div>
+        <table class="table table-bordered table-responsive-md table-striped text-center">
+        </table>
+    </div>
+
+    <script src="mpegts.js"></script>
+    <script>
+
+        requestUsers();
+        setInterval(requestUsers, 5000); //Check for user updates every 5 seconds.
+
+        function requestUsers() {
+            const Http = new XMLHttpRequest();
+            const url = `/users`;
+            Http.open("GET", url);
+            Http.send();
+
+            Http.onreadystatechange = (e) => {
+                try {
+                    var connectedUsers = JSON.parse(Http.responseText);
+                    let table = document.querySelector("table");
+                    if (connectedUsers.users) {
+                        generateTableHead(table, connectedUsers.users);
+                    }
+
+                } catch (err) {
+
+                }
+            }
+        }
+
+
+        function generateTableHead(table, users) {
+            document.querySelector("table").innerHTML = "";
+            let thead = table.createTHead();
+            let firstRow = thead.insertRow();
+            var firstCell = firstRow.insertCell(0);
+
+            firstCell.innerHTML = `Connected Users (${users.length}):`;
+            firstCell.style.font = "bold 20px verdana,sans-serif";
+
+            for (let user of users) {
+                if (!user) user = "Anonymous"
+                let row = thead.insertRow();
+                var cell = row.insertCell(0);
+                cell.innerHTML = user;
+
+            }
+        }
+
+    </script>
+    <script>
+
+
+        function loadPlayer() {
+            var i;
+            var options = {
+                type: 'mse',
+                url: document.getElementById('sURL').value,
+                isLive: true,
+                withCredentials: false,
+                liveBufferLatencyChasing: true
+
+            };
+            var element = document.getElementsByName('videoElement')[0];
+            if (typeof player !== "undefined") {
+                if (player != null) {
+                    player.unload();
+                    player.detachMediaElement();
+                    player.destroy();
+                    player = null;
+                }
+            }
+            player = mpegts.createPlayer(options, {
+                enableWorker: true,
+                lazyLoadMaxDuration: 3 * 60,
+                seekType: 'range',
+                liveBufferLatencyChasing: true,
+            });
+            player.attachMediaElement(element);
+            player.load();
+
+        }
+
+        function Login() {
+            var streamKey = document.getElementById('streamKey');
+            var username = document.getElementById('username');
+            var sURL = document.getElementById('sURL');
+            if (!streamKey.value || !username.value || !sURL.value) {
+                alert("Give a username, streamkey, and streamURL");
+                return;
+            }
+
+            document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "streamURL=" + sURL.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            loadPlayer();
+        }
+
+        function loadSettings() {
+            var streamKey = document.getElementById('streamKey');
+            var username = document.getElementById('username');
+            var sURL = document.getElementById('sURL');
+            var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+            try {
+                if (cookies.streamkey) {
+                    streamKey.value = cookies.streamkey;
+                }
+
+            } catch (err) {
+                console.log("Error loading streamKey cookie.");
+            }
+            try {
+                if (cookies.username) {
+                    username.value = cookies.username;
+                }
+
+            } catch (err) {
+                console.log("Error loading username cookie.");
+            }
+            try {
+                if (cookies.streamURL) {
+                    sURL.value = cookies.streamURL;
+                }
+            } catch (err) {
+                console.log("Error loading streamURL cookie.");
+            }
+
+            if (sURL.value == '') {
+                sURL.value = `wss://${document.location.host}`
+            }
+            loadPlayer();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSettings();
+        });
+    </script>
+
+</body>
+
+</html>
