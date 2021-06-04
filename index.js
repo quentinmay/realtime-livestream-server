@@ -80,7 +80,7 @@ socketServer.broadcast = function (data) {
 
 httpsServer.listen(config.wsPort);
 
-// HTTPS Server to accept incomming MPEG-TS Stream from ffmpeg
+
 var streamServer = https.createServer(options, function (request, response) {
 	var params = request.url.substr(1).split('/');
 
@@ -115,13 +115,8 @@ var streamServer = https.createServer(options, function (request, response) {
 		}
 	});
 
-	// Record the stream to a local file?
-	if (config.recordStream == true) {
-		var path = 'recordings/' + Date.now() + '.ts';
-		request.socket.recording = fs.createWriteStream(path);
-	}
 })
-// Keep the socket open for streaming
+
 streamServer.headersTimeout = 0;
 streamServer.listen(config.streamPort);
 

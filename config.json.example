@@ -1,0 +1,8 @@
+{
+    "sslKey": "/path/to/sslkey",
+    "sslCert": "/path/to/sslCert",
+    "streamKey": "streamkey",
+    "streamSecret": "streamsecret",
+    "streamPort": "8081",
+    "wsPort": "443"
+}
