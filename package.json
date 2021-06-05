@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/quentinmay/realtime-livestream-server/issues"
   },
-  "homepage": "https://github.com/quentinmay/realtime-livestream-server#readme"
+  "homepage": "https://github.com/quentinmay/realtime-livestream-server#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "ws": "^7.4.6"
+  }
 }
