@@ -28,7 +28,7 @@ sudo node index.js
 ```
 ### 4. Stream to the server (OBS)
 * Pick one:
-  1. Low Latency Mode (150ms):
+  1. Low Latency Mode (110ms):
 ![image](https://user-images.githubusercontent.com/73214439/120874862-71fd7b00-c55d-11eb-90d6-28f6ef496d42.png)
 
   1. High Quality Mode (500ms):
