@@ -24,6 +24,8 @@ page.get("/", function (req, res) {
 		res.sendFile(path.join(__dirname, "/public/lowlatency.html"));
 	} else if (decision == 'quality') {
 		res.sendFile(path.join(__dirname, "/public/quality.html"));
+	} else {
+		res.sendFile(path.join(__dirname, "/public/default.html"));
 	}
 });
 
@@ -94,7 +96,7 @@ var streamServer = https.createServer(options, function (request, response) {
 	} else if (params[1] == 'quality') {
 		decision = 'quality';
 		console.log(`Switched to quality mode.`);
-	}  else {
+	} else {
 		console.log("No stream type given. Use either lowlatency or quality.");
 		process.exit(0);
 	}
