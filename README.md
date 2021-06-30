@@ -1,4 +1,4 @@
-# Realtime Livestream Server
+# 🎬 Realtime Livestream Server
 Put together specifically to be an easily and quickly deployed video live streaming server/website meant for sharing content with friends.
 
 🔒 All traffic uses SSL encryption to keep data safe from hackers or peepers.
