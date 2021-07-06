@@ -90,6 +90,26 @@
     </script>
     <script>
 
+        const video = document.querySelector("[name=videoElement]");
+
+        video.addEventListener('volumechange', (event) => {
+            document.cookie = "volume=" + video.volume + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+        });
+        setDefaultVolume();
+
+        function setDefaultVolume() {
+            var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+            try {
+                if (cookies.volume) {
+                    if (!isNaN(cookies.volume) && cookies.volume <= 1 && cookies.volume >= 0) {
+                        video.volume = cookies.volume;
+                    }
+                }
+
+            } catch (err) {
+                console.log("Error setting default video volume.");
+            }
+        }
 
         function loadPlayer() {
             var i;
