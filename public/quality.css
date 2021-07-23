@@ -1,6 +1,18 @@
+@import url('https://fonts.googleapis.com/css?family=Encode+Sans+SC&display=swap');
 html {
     background-color: black;
     color:white;
+    font-family: 'Encode Sans SC', sans-serif;
+}
+
+b {
+    font-family: 'Encode Sans SC', sans-serif;
+
+}
+
+button {
+    border-radius: 10px;
+
 }
 
 .mainContainer {
@@ -11,7 +23,12 @@ html {
 }
 
 .table {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    /* font-family: Verdana, Geneva, Tahoma, sans-serif; */
+}
+
+#logon {
+
+
 }
 
 .video-container {

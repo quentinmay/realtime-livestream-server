@@ -76,7 +76,6 @@
             var firstCell = firstRow.insertCell(0);
 
             firstCell.innerHTML = `Connected Users (${users.length}):`;
-            firstCell.style.font = "bold 20px verdana,sans-serif";
 
             for (let user of users) {
                 if (!user) user = "Anonymous"
