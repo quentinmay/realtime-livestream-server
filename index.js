@@ -3,6 +3,7 @@ var express = require('express');
 const path = require('path');
 var fs = require('fs');
 var https = require('https');
+var http = require('http');
 var ws = require('ws');
 
 const options = {
@@ -28,6 +29,15 @@ page.get("/", function (req, res) {
 		res.sendFile(path.join(__dirname, "/public/default.html"));
 	}
 });
+
+
+//Redirects from http to https to stop accidental wrong URLs
+var redirect = express();
+var server = http.createServer(redirect);
+redirect.get('*', function (req, res) {
+	res.redirect('https://' + req.headers.host + req.url);
+})
+server.listen(80);
 
 
 var app = express();
