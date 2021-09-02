@@ -99,6 +99,7 @@ var streamServer = https.createServer(options, function (request, response) {
 	if (params[0] !== config.streamSecret) {
 		console.log(`Failed Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} - wrong secret.`);
 		response.end();
+		return false;
 	}
 	if (params[1] == 'lowlatency') {
 		decision = 'lowlatency';
@@ -108,7 +109,8 @@ var streamServer = https.createServer(options, function (request, response) {
 		console.log(`Switched to quality mode.`);
 	} else {
 		console.log("No stream type given. Use either lowlatency or quality.");
-		process.exit(0);
+		response.end();
+		return false;
 	}
 
 	response.connection.setTimeout(0);
