@@ -11,11 +11,12 @@
 
     <div class="mainContainer">
         <div>
+            <button onclick="toggleDarkMode()" class="toggle-dark">Light/Dark Mode</button>
             <div id="login">
 
                 <label for="username" style="font-family: Verdana, Geneva, Tahoma, sans-serif;"><b>Display
                         Name:</b></label>
-                <input id="username" type="text" placeholder="Enter display name" value="" />
+                <input id="username" type="text" placeholder="Enter display name" value="" maxlength="20" />
 
                 <label for="streamKey" style="font-family: Verdana, Geneva, Tahoma, sans-serif;"><b>Stream
                         Key:</b></label>
@@ -86,6 +87,12 @@
             }
         }
 
+    </script>
+    <script>
+        function toggleDarkMode() {
+            var body = document.body;
+            body.classList.toggle("light-mode");
+        }
     </script>
     <script>
 
