@@ -46,28 +46,31 @@
     <script src="mpegts.js"></script>
     <script>
 
-        requestUsers();
-        setInterval(requestUsers, 5000); //Check for user updates every 5 seconds.
-
-        function requestUsers() {
-            const Http = new XMLHttpRequest();
-            const url = `/users`;
-            Http.open("GET", url);
-            Http.send();
-
-            Http.onreadystatechange = (e) => {
-                try {
-                    var connectedUsers = JSON.parse(Http.responseText);
-                    let table = document.querySelector("table");
-                    if (connectedUsers.users) {
-                        generateTableHead(table, connectedUsers.users);
+connectSocket();
+		function connectSocket() {
+            try {
+                var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+                if (cookies.streamURL) {
+                    // console.log(cookies.streamURL);
+                    let ws = new WebSocket(`${cookies.streamURL}:444`);
+                    ws.onmessage = function (event) {
+                        let users = JSON.parse(event.data);
+                        let table = document.querySelector("table");
+                        if (users) {
+                            generateTableHead(table, users);
+                        }
                     }
-
-                } catch (err) {
-
+                    ws.onclose = function(){
+                        ws = null
+                        setTimeout(connectSocket, 5000);
+                    }
                 }
+
+            } catch (err) {
+                console.log("Error loading users.");
             }
-        }
+	    }
+            
 
 
         function generateTableHead(table, users) {

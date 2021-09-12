@@ -4,5 +4,6 @@
     "streamKey": "streamkey",
     "streamSecret": "streamsecret",
     "streamPort": "8081",
-    "wsPort": "443"
+    "wsPort": "443",
+    "wsUsersPort": "444"
 }

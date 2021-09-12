@@ -46,11 +46,19 @@ app.use("/users", users);
 app.use("/", page);
 
 var httpsServer = https.createServer(options, app);
+
+var httpsServerForUsers = https.createServer(options);
+
+
 var socketServer = new ws.Server({ server: httpsServer, perMessageDeflate: false });
+
+
+var socketServerUsers = new ws.Server({ server: httpsServerForUsers, perMessageDeflate: false });
+
 socketServer.connectionCount = 0;
 
 socketServer.on('connection', function (socket, upgradeReq) {
-	var cookies;
+	let cookies;
 	try {
 		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
 		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
@@ -59,6 +67,7 @@ socketServer.on('connection', function (socket, upgradeReq) {
 			return;
 		} else {
 			usersArray.push(cookies.username);
+			updateUsers();
 		}
 	} catch (err) {
 		socket.close();
@@ -72,6 +81,7 @@ socketServer.on('connection', function (socket, upgradeReq) {
 			usersArray.find((user, i) => {
 				if (user == cookies.username) {
 					usersArray.splice(i, 1); // Find and remove first matching username
+					updateUsers();
 				}
 			});
 		} catch (err) {
@@ -82,6 +92,7 @@ socketServer.on('connection', function (socket, upgradeReq) {
 		console.log(`${cookies.username} disconnected. (${socketServer.connectionCount} total).`);
 	});
 });
+
 socketServer.broadcast = function (data) {
 	socketServer.clients.forEach(function each(client) {
 		if (client.readyState === ws.OPEN) {
@@ -90,7 +101,41 @@ socketServer.broadcast = function (data) {
 	});
 };
 
+
+socketServerUsers.connectionCount = 0;
+
+socketServerUsers.on('connection', function (socket, upgradeReq) {
+	let cookies;
+	try {
+		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
+			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')}`);
+			socket.close();
+			return;
+		}
+	} catch (err) {
+		socket.close();
+		return;
+	}
+	socketServerUsers.connectionCount++;
+	updateUsers();
+
+	socket.on('close', function (code, message) {
+		socketServerUsers.connectionCount--;
+	});
+});
+
+function updateUsers() {
+	socketServerUsers.clients.forEach(function each(client) {
+		if (client.readyState === ws.OPEN) {
+			client.send(JSON.stringify(usersArray));
+		}
+	});
+}
+
+
 httpsServer.listen(config.wsPort);
+httpsServerForUsers.listen(config.wsUsersPort);
 
 
 var streamServer = https.createServer(options, function (request, response) {
