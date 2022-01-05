@@ -5,6 +5,8 @@ var fs = require('fs');
 var https = require('https');
 var http = require('http');
 var ws = require('ws');
+var geoip = require('geoip-lite');
+
 
 const options = {
 	key: fs.readFileSync(config.sslKey),
@@ -59,10 +61,16 @@ socketServer.connectionCount = 0;
 
 socketServer.on('connection', function (socket, upgradeReq) {
 	let cookies;
+	let location;
+	try {
+		location = geoip.lookup((upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', ''));
+	} catch (err) {
+		console.log("GeoIP not loaded correctly or key not given.")
+	}
 	try {
 		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
 		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
-			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')}`);
+			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
 			socket.close();
 			return;
 		} else {
@@ -75,7 +83,7 @@ socketServer.on('connection', function (socket, upgradeReq) {
 	}
 
 	socketServer.connectionCount++;
-	console.log(`New user connected to stream: ${cookies.username} - ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')}. (${socketServer.connectionCount} total).`);
+	console.log(`New user connected to stream: ${cookies.username} - ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}.(${socketServer.connectionCount} total).`);
 	socket.on('close', function (code, message) {
 		try {
 			usersArray.find((user, i) => {
@@ -89,7 +97,7 @@ socketServer.on('connection', function (socket, upgradeReq) {
 		}
 
 		socketServer.connectionCount--;
-		console.log(`${cookies.username} disconnected. (${socketServer.connectionCount} total).`);
+		console.log(`${cookies.username} disconnected (${socketServer.connectionCount} total).`);
 	});
 });
 
@@ -106,10 +114,17 @@ socketServerUsers.connectionCount = 0;
 
 socketServerUsers.on('connection', function (socket, upgradeReq) {
 	let cookies;
+	let location;
+	try {
+		location = geoip.lookup((upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', ''));
+	} catch (err) {
+		console.log("GeoIP not loaded correctly or key not given.")
+	}
 	try {
 		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
 		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
-			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')}`);
+			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
+			// console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} `);
 			socket.close();
 			return;
 		}
@@ -140,9 +155,14 @@ httpsServerForUsers.listen(config.wsUsersPort);
 
 var streamServer = https.createServer(options, function (request, response) {
 	var params = request.url.substr(1).split('/');
-
+	let location;
+	try {
+		location = geoip.lookup(request.socket.remoteAddress.replace('::ffff:', ''));
+	} catch (err) {
+		console.log("GeoIP not loaded correctly or key not given.")
+	}
 	if (params[0] !== config.streamSecret) {
-		console.log(`Failed Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} - wrong secret.`);
+		console.log(`Failed Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"} - wrong secret.`);
 		response.end();
 		return false;
 	}
@@ -159,7 +179,8 @@ var streamServer = https.createServer(options, function (request, response) {
 	}
 
 	response.connection.setTimeout(0);
-	console.log(`Successful Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort}`);
+	// console.log(`Successful Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} `);
+	console.log(`Successful Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
 
 	request.on('data', function (data) {
 		socketServer.broadcast(data);
