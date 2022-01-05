@@ -42,46 +42,35 @@
 		style="font-family: Verdana, Geneva, Tahoma, sans-serif; color:white;">
 	</table>
 	<script type="text/javascript">
-
-		function Login() {
-			var streamKey = document.getElementById('streamKey');
-			var username = document.getElementById('username');
-			if (!streamKey.value || !username.value) {
-				alert("Give a username and streamkey");
-				return;
-			}
-
-			document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-			document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-		}
 	</script>
 
 	<script>
 
 		connectSocket();
 		function connectSocket() {
-			try {
-				var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
-				if (cookies.streamURL) {
-					// console.log(cookies.streamURL);
-					let ws = new WebSocket(`${cookies.streamURL}:444`);
-					ws.onmessage = function (event) {
-						let users = JSON.parse(event.data);
-						let table = document.querySelector("table");
-						if (users) {
-							generateTableHead(table, users);
-						}
-					}
-					ws.onclose = function(){
-						ws = null
-						setTimeout(connectSocket, 5000);
-					}
-				}
+            try {
+                // var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
 
-			} catch (err) {
-				console.log("Error loading users.");
-			}
-		}
+                if (window.localStorage.getItem('streamURL')) {
+                    // console.log(cookies.streamURL);
+                    let ws = new WebSocket(`${window.localStorage.getItem('streamURL')}:444`);
+                    ws.onmessage = function (event) {
+                        let users = JSON.parse(event.data);
+                        let table = document.querySelector("table");
+                        if (users) {
+                            generateTableHead(table, users);
+                        }
+                    }
+                    ws.onclose = function(){
+                        ws = null
+                        setTimeout(connectSocket, 5000);
+                    }
+                }
+
+            } catch (err) {
+                console.log("Error loading users.");
+            }
+	    }
 
 
 		function generateTableHead(table, users) {
@@ -108,60 +97,62 @@
 
 
 		function loadPlayer() {
+			document.cookie = "streamkey=" + window.localStorage.getItem('streamkey') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "username=" + window.localStorage.getItem('username') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "streamURL=" + window.localStorage.getItem('streamURL') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
 			var canvas = document.getElementById('video-canvas');
 			var url = document.getElementById('sURL').value
 			var player = new JSMpeg.Player(url, { canvas: canvas });
 		}
 
-		function Login() {
-			var streamKey = document.getElementById('streamKey');
-			var username = document.getElementById('username');
-			var sURL = document.getElementById('sURL');
-			if (!streamKey.value || !username.value || !sURL.value) {
-				alert("Give a username, streamkey, and streamURL");
-				return;
-			}
+        function Login() {
+            var streamKey = document.getElementById('streamKey');
+            var username = document.getElementById('username');
+            var sURL = document.getElementById('sURL');
+            if (!streamKey.value || !username.value || !sURL.value) {
+                alert("Give a username, streamkey, and streamURL");
+                return;
+            }
+            window.localStorage.setItem('streamkey', streamKey.value)
+            window.localStorage.setItem('username', username.value)
+            window.localStorage.setItem('streamURL', sURL.value)
+            loadPlayer();
+        }
 
-			document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-			document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-			document.cookie = "streamURL=" + sURL.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-			loadPlayer();
-		}
+        function loadSettings() {
+            var streamKey = document.getElementById('streamKey');
+            var username = document.getElementById('username');
+            var sURL = document.getElementById('sURL');
+            // var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+            try {
+                if (window.localStorage.getItem('streamkey')) {
+                    streamKey.value = window.localStorage.getItem('streamkey');
+                }
 
-		function loadSettings() {
-			var streamKey = document.getElementById('streamKey');
-			var username = document.getElementById('username');
-			var sURL = document.getElementById('sURL');
-			var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
-			try {
-				if (cookies.streamkey) {
-					streamKey.value = cookies.streamkey;
-				}
+            } catch (err) {
+                console.log("Error loading streamKey from storage.");
+            }
+            try {
+                if (window.localStorage.getItem('username')) {
+                    username.value = window.localStorage.getItem('username');
+                }
 
-			} catch (err) {
-				console.log("Error loading streamKey cookie.");
-			}
-			try {
-				if (cookies.username) {
-					username.value = cookies.username;
-				}
+            } catch (err) {
+                console.log("Error loading username from storage.");
+            }
+            try {
+                if (window.localStorage.getItem('streamURL')) {
+                    sURL.value = window.localStorage.getItem('streamURL');
+                }
+            } catch (err) {
+                console.log("Error loading streamURL from storage.");
+            }
 
-			} catch (err) {
-				console.log("Error loading username cookie.");
-			}
-			try {
-				if (cookies.streamURL) {
-					sURL.value = cookies.streamURL;
-				}
-			} catch (err) {
-				console.log("Error loading streamURL cookie.");
-			}
-
-			if (sURL.value == '') {
-				sURL.value = `wss://${document.location.host}`
-			}
-			loadPlayer();
-		}
+            if (sURL.value == '') {
+                sURL.value = `wss://${document.location.host}`
+            }
+            loadPlayer();
+        }
 
 		document.addEventListener('DOMContentLoaded', function () {
 			loadSettings();

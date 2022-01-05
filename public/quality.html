@@ -46,13 +46,14 @@
     <script src="mpegts.js"></script>
     <script>
 
-connectSocket();
+        connectSocket();
 		function connectSocket() {
             try {
-                var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
-                if (cookies.streamURL) {
+                // var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+
+                if (window.localStorage.getItem('streamURL')) {
                     // console.log(cookies.streamURL);
-                    let ws = new WebSocket(`${cookies.streamURL}:444`);
+                    let ws = new WebSocket(`${window.localStorage.getItem('streamURL')}:444`);
                     ws.onmessage = function (event) {
                         let users = JSON.parse(event.data);
                         let table = document.querySelector("table");
@@ -100,18 +101,18 @@ connectSocket();
     <script>
 
         const video = document.querySelector("[name=videoElement]");
-
         video.addEventListener('volumechange', (event) => {
-            document.cookie = "volume=" + video.volume + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            window.localStorage.setItem('volume', video.volume)
+            // document.cookie = "volume=" + video.volume + '; expires=' + new Date(2147483647 * 1000).toUTCString();
         });
         setDefaultVolume();
 
         function setDefaultVolume() {
-            var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+            // var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
             try {
-                if (cookies.volume) {
-                    if (!isNaN(cookies.volume) && cookies.volume <= 1 && cookies.volume >= 0) {
-                        video.volume = cookies.volume;
+                if (window.localStorage.getItem('volume')) {
+                    if (!isNaN(window.localStorage.getItem('volume')) && window.localStorage.getItem('volume') <= 1 && window.localStorage.getItem('volume') >= 0) {
+                        video.volume = window.localStorage.getItem('volume');
                     }
                 }
 
@@ -121,6 +122,9 @@ connectSocket();
         }
 
         function loadPlayer() {
+            document.cookie = "streamkey=" + window.localStorage.getItem('streamkey') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "username=" + window.localStorage.getItem('username') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            document.cookie = "streamURL=" + window.localStorage.getItem('streamURL') + '; expires=' + new Date(2147483647 * 1000).toUTCString();
             var i;
             var options = {
                 type: 'mse',
@@ -158,10 +162,9 @@ connectSocket();
                 alert("Give a username, streamkey, and streamURL");
                 return;
             }
-
-            document.cookie = "streamkey=" + streamKey.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-            document.cookie = "username=" + username.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
-            document.cookie = "streamURL=" + sURL.value + '; expires=' + new Date(2147483647 * 1000).toUTCString();
+            window.localStorage.setItem('streamkey', streamKey.value)
+            window.localStorage.setItem('username', username.value)
+            window.localStorage.setItem('streamURL', sURL.value)
             loadPlayer();
         }
 
@@ -169,29 +172,29 @@ connectSocket();
             var streamKey = document.getElementById('streamKey');
             var username = document.getElementById('username');
             var sURL = document.getElementById('sURL');
-            var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+            // var cookies = Object.fromEntries(document.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
             try {
-                if (cookies.streamkey) {
-                    streamKey.value = cookies.streamkey;
+                if (window.localStorage.getItem('streamkey')) {
+                    streamKey.value = window.localStorage.getItem('streamkey');
                 }
 
             } catch (err) {
-                console.log("Error loading streamKey cookie.");
+                console.log("Error loading streamKey from storage.");
             }
             try {
-                if (cookies.username) {
-                    username.value = cookies.username;
+                if (window.localStorage.getItem('username')) {
+                    username.value = window.localStorage.getItem('username');
                 }
 
             } catch (err) {
-                console.log("Error loading username cookie.");
+                console.log("Error loading username from storage.");
             }
             try {
-                if (cookies.streamURL) {
-                    sURL.value = cookies.streamURL;
+                if (window.localStorage.getItem('streamURL')) {
+                    sURL.value = window.localStorage.getItem('streamURL');
                 }
             } catch (err) {
-                console.log("Error loading streamURL cookie.");
+                console.log("Error loading streamURL from storage.");
             }
 
             if (sURL.value == '') {
