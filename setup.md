@@ -22,11 +22,16 @@ mv config.json.example config.json
 * **streamKey**: Acts as a sort of "stream id". This will be given to your friends so they can access the stream.
 * **streamSecret**: Basically the streams password. Should only be known to the person who is providing the live stream.
 
-### 3. Start the server.
+### 3. (Optional) Install geoip for user locations.
+Follow database installation from https://www.npmjs.com/package/geoip-lite
+![image](https://user-images.githubusercontent.com/73214439/148211530-b43d36b5-b234-4a92-a675-8c512948aa11.png)
+
+
+### 4. Start the server.
 ```bash
 sudo node index.js
 ```
-### 4. Stream to the server (OBS)
+### 5. Stream to the server (OBS)
 * Pick one:
   1. Low Latency Mode (110ms):
 ![image](https://user-images.githubusercontent.com/73214439/120874862-71fd7b00-c55d-11eb-90d6-28f6ef496d42.png)
@@ -35,7 +40,7 @@ sudo node index.js
 ![image](https://user-images.githubusercontent.com/73214439/120874912-b12bcc00-c55d-11eb-801c-b35f3626486f.png)
 Then on OBS, click "Start Recording" to begin the stream.
 
-### 5. Open your website, fill out the info, then click "Join Stream":
+### 6. Open your website, fill out the info, then click "Join Stream":
 ![image](https://user-images.githubusercontent.com/73214439/120875245-b853d980-c55f-11eb-9318-5d2199699ce4.png)
 
-### 6. Pass the website link and streamKey to your friends and enjoy 👍
+### 7. Pass the website link and streamKey to your friends and enjoy 👍
