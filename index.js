@@ -75,13 +75,16 @@ const uWSApp = uWS.SSLApp({
 		ws.subscribe('broadcast');
 	  },
 	/* For brevity we skip the other events (upgrade, open, ping, pong, close) */
-	// message: (ws, message, isBinary) => {
+	message: (ws, message, isBinary) => {
+		// console.log(message)
+		uWSApp.publish('broadcast', message, true);
+
 	  /* You can do app.publish('sensors/home/temperature', '22C') kind of pub/sub as well */
 	  
 	  /* Here we echo the message back, using compression if available */
 	//   let ok = ws.send(message, isBinary, true);
 	//   ws.publish('broadcast', message, isBinary);
-	// },
+	},
   	close: (ws, code, message) => {
     	console.log('WebSocket closed');
   	}

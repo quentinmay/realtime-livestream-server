@@ -19,6 +19,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "geoip-lite": "^1.4.2",
+    "node-ffmpeg-stream": "github:uk2nk/node-ffmpeg-stream",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "ws": "^7.4.6"
   }
