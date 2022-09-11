@@ -47,67 +47,115 @@ app.use(express.static('public'));
 app.use("/users", users);
 app.use("/", page);
 
-var httpsServer = https.createServer(options, app);
+// var httpsServer = https.createServer(options, app);
 
 var httpsServerForUsers = https.createServer(options);
 
 
-var socketServer = new ws.Server({ server: httpsServer, perMessageDeflate: false });
+const uWS = require('uWebSockets.js');
+const e = require('express');
+
+const uWSApp = uWS.SSLApp({
+// var socketServer = new ws.Server({ server: httpsServer, perMessageDeflate: false });
+
+	/* There are more SSL options, cut for brevity */
+	key_file_name: config.sslKey,
+	cert_file_name: config.sslCert,
+	// passphrase: '1234'
+  }).ws('/*', {
+  
+	/* There are many common helper features */
+	compression: 0,
+    maxPayloadLength: 16 * 1024 * 1024,
+    idleTimeout: 60,
+
+  
+	open: (ws) => {
+		console.log('A WebSocket connected!');
+		ws.subscribe('broadcast');
+	  },
+	/* For brevity we skip the other events (upgrade, open, ping, pong, close) */
+	// message: (ws, message, isBinary) => {
+	  /* You can do app.publish('sensors/home/temperature', '22C') kind of pub/sub as well */
+	  
+	  /* Here we echo the message back, using compression if available */
+	//   let ok = ws.send(message, isBinary, true);
+	//   ws.publish('broadcast', message, isBinary);
+	// },
+  	close: (ws, code, message) => {
+    	console.log('WebSocket closed');
+  	}
+	
+  }).get('/*', (res, req) => {
+
+	/* It does Http as well */
+	res.writeStatus('200 OK').writeHeader('IsExample', 'Yes').end('Hello there!');
+	
+  }).listen(parseInt(config.wsPort), (token) => {
+	if (token) {
+	  console.log('Listening to port ' + config.wsPort);
+	} else {
+		console.log(token)
+	  console.log('Failed to listen to port ' + config.wsPort);
+	}
+	
+  });
+  
 
 
 var socketServerUsers = new ws.Server({ server: httpsServerForUsers, perMessageDeflate: false });
 
-socketServer.connectionCount = 0;
+// socketServer.connectionCount = 0;
 
-socketServer.on('connection', function (socket, upgradeReq) {
-	let cookies;
-	let location;
-	try {
-		location = geoip.lookup((upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', ''));
-	} catch (err) {
-		console.log("GeoIP not loaded correctly or key not given.")
-	}
-	try {
-		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
-		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
-			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
-			socket.close();
-			return;
-		} else {
-			usersArray.push(cookies.username);
-			updateUsers();
-		}
-	} catch (err) {
-		socket.close();
-		return;
-	}
+// socketServer.on('connection', function (socket, upgradeReq) {
+// 	let cookies;
+// 	let location;
+// 	try {
+// 		location = geoip.lookup((upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', ''));
+// 	} catch (err) {
+// 		console.log("GeoIP not loaded correctly or key not given.")
+// 	}
+// 	try {
+// 		cookies = Object.fromEntries((upgradeReq || socket.upgradeReq).headers.cookie.split('; ').map(x => x.split(/=(.*)$/, 2).map(decodeURIComponent)))
+// 		if (cookies.streamkey != config.streamKey || !cookies.username) { //Failed authentication
+// 			console.log(`Failed authentication from: ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
+// 			socket.close();
+// 			return;
+// 		} else {
+// 			usersArray.push(cookies.username);
+// 			updateUsers();
+// 		}
+// 	} catch (err) {
+// 		socket.close();
+// 		return;
+// 	}
 
-	socketServer.connectionCount++;
-	console.log(`New user connected to stream: ${cookies.username} - ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}.(${socketServer.connectionCount} total).`);
-	socket.on('close', function (code, message) {
-		try {
-			usersArray.find((user, i) => {
-				if (user == cookies.username) {
-					usersArray.splice(i, 1); // Find and remove first matching username
-					updateUsers();
-				}
-			});
-		} catch (err) {
+// 	socketServer.connectionCount++;
+// 	console.log(`New user connected to stream: ${cookies.username} - ${(upgradeReq || socket.upgradeReq).socket.remoteAddress.replace('::ffff:', '')} : ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}.(${socketServer.connectionCount} total).`);
+// 	socket.on('close', function (code, message) {
+// 		try {
+// 			usersArray.find((user, i) => {
+// 				if (user == cookies.username) {
+// 					usersArray.splice(i, 1); // Find and remove first matching username
+// 					updateUsers();
+// 				}
+// 			});
+// 		} catch (err) {
 
-		}
+// 		}
 
-		socketServer.connectionCount--;
-		console.log(`${cookies.username} disconnected (${socketServer.connectionCount} total).`);
-	});
-});
+// 		socketServer.connectionCount--;
+// 		console.log(`${cookies.username} disconnected (${socketServer.connectionCount} total).`);
+// 	});
+// });
 
-socketServer.broadcast = function (data) {
-	socketServer.clients.forEach(function each(client) {
-		if (client.readyState === ws.OPEN) {
-			client.send(data);
-		}
-	});
-};
+// socketServer.broadcast = function (data) {
+// 	socketServer.clients.forEach(function each(client) {
+// 		if (client.readyState === ws.OPEN) {
+// 			client.send(data);
+// 		}
+// 	});
+// };
 
 
 socketServerUsers.connectionCount = 0;
@@ -149,7 +197,7 @@ function updateUsers() {
 }
 
 
-httpsServer.listen(config.wsPort);
+// httpsServer.listen(config.wsPort);
 httpsServerForUsers.listen(config.wsUsersPort);
 
 
@@ -183,7 +231,8 @@ var streamServer = https.createServer(options, function (request, response) {
 	console.log(`Successful Stream Connection: ${request.socket.remoteAddress.replace('::ffff:', '')}:${request.socket.remotePort} ${(location) ? (`${location.city}, ${location.region} ${location.country}`) : "(Unknown Location)"}`);
 
 	request.on('data', function (data) {
-		socketServer.broadcast(data);
+		uWSApp.publish('broadcast', data, true);
+		// socketServer.broadcast(data);
 		if (request.socket.recording) {
 			request.socket.recording.write(data);
 		}
